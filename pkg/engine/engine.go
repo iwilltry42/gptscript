@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"slices"
 	"strconv"
@@ -292,6 +293,7 @@ func (c *Context) WrappedContext(e *Engine) context.Context {
 func populateMessageParams(ctx Context, completion *types.CompletionRequest, tool types.Tool) error {
 	completion.Model = tool.ModelName
 	completion.MaxTokens = tool.MaxTokens
+	slog.Info("populateMessageParams", "maxTokens", completion.MaxTokens)
 	completion.JSONResponse = tool.JSONResponse
 	completion.Cache = tool.Cache
 	completion.Chat = tool.Chat

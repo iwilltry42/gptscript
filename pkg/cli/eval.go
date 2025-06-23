@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -42,6 +43,8 @@ func (e *Eval) Run(cmd *cobra.Command, args []string) error {
 			Instructions: strings.Join(args, " "),
 		},
 	}
+
+	slog.Info("eval.Run", "maxTokens", tool.MaxTokens)
 
 	if e.Temperature != "" {
 		temp, err := strconv.ParseFloat(e.Temperature, 32)
