@@ -4,7 +4,10 @@ go 1.24.2
 
 toolchain go1.24.4
 
-replace github.com/danielgtaylor/huma/v2 => github.com/gptscript-ai/huma v0.0.0-20250617131016-b2081da6c65b
+replace (
+	github.com/danielgtaylor/huma/v2 => github.com/gptscript-ai/huma v0.0.0-20250617131016-b2081da6c65b
+	github.com/gptscript-ai/chat-completion-client => github.com/iwilltry42/chat-completion-client v0.0.0-20250624115257-a1b2b2e0f498
+)
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7

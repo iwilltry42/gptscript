@@ -389,6 +389,8 @@ func (c *Client) Call(ctx context.Context, messageRequest types.CompletionReques
 		MaxTokens: messageRequest.MaxTokens,
 	}
 
+	slog.Info("client.Call", "maxTokens", request.MaxTokens)
+
 	if messageRequest.Temperature == nil {
 		request.Temperature = new(float32)
 	} else {
@@ -508,7 +510,9 @@ func (c *Client) contextLimitRetryLoop(ctx context.Context, request openai.ChatC
 		var apiError *openai.APIError
 		if errors.As(err, &apiError) && apiError.Code == "context_length_exceeded" {
 			// Decrease maxTokens and try again
+			before := maxTokens
 			maxTokens = decreaseTenPercent(maxTokens)
+			slog.Info("contextLimitRetryLoop - decreasing maxTokens", "before", before, "after", maxTokens)
 			continue
 		}
 		return types.CompletionMessage{}, err
@@ -637,6 +641,8 @@ func (c *Client) call(ctx context.Context, request openai.ChatCompletionRequest,
 	if ok {
 		engineCtx.OnUserCancel(ctx, cancel)
 	}
+
+	slog.Info("sending message to openai", "maxTokens", request.MaxTokens)
 
 	if !streamResponse {
 		request.StreamOptions = nil

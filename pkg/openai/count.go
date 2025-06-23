@@ -2,6 +2,9 @@ package openai
 
 import (
 	"encoding/json"
+	"log/slog"
+	"os"
+	"strconv"
 
 	openai "github.com/gptscript-ai/chat-completion-client"
 	"github.com/gptscript-ai/gptscript/pkg/types"
@@ -15,6 +18,20 @@ func init() {
 
 const DefaultMaxTokens = 128_000
 
+func defaultMaxTokens() int {
+	if os.Getenv("GPTSCRIPT_DEFAULT_MAX_TOKENS") != "" {
+		maxTokens, err := strconv.ParseInt(os.Getenv("GPTSCRIPT_DEFAULT_MAX_TOKENS"), 10, 0)
+		if err != nil {
+			slog.Error("failed to parse GPTSCRIPT_DEFAULT_MAX_TOKENS", "error", err)
+			return DefaultMaxTokens
+		}
+		slog.Info("defaultMaxTokens (env)", "maxTokens", maxTokens)
+		return int(maxTokens)
+	}
+	slog.Info("defaultMaxTokens (unset)", "maxTokens", DefaultMaxTokens)
+	return DefaultMaxTokens
+}
+
 func decreaseTenPercent(maxTokens int) int {
 	maxTokens = getBudget(maxTokens)
 	return int(float64(maxTokens) * 0.9)
@@ -22,8 +39,10 @@ func decreaseTenPercent(maxTokens int) int {
 
 func getBudget(maxTokens int) int {
 	if maxTokens <= 0 {
-		return DefaultMaxTokens
+		slog.Info("getBudget - maxTokens is less than or equal to 0, using default maxTokens", "maxTokens", maxTokens)
+		return defaultMaxTokens()
 	}
+	slog.Info("getBudget - maxTokens is greater than 0", "maxTokens", maxTokens)
 	return maxTokens
 }
 
