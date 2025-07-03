@@ -2,6 +2,9 @@ package openai
 
 import (
 	"encoding/json"
+	"log/slog"
+	"os"
+	"strconv"
 
 	openai "github.com/gptscript-ai/chat-completion-client"
 	"github.com/gptscript-ai/gptscript/pkg/types"
@@ -9,11 +12,19 @@ import (
 	tiktoken_loader "github.com/pkoukk/tiktoken-go-loader"
 )
 
+var DefaultMaxTokens = 128_000
+
 func init() {
 	tiktoken.SetBpeLoader(tiktoken_loader.NewOfflineLoader())
+	defaultMaxTokensEnv := os.Getenv("GPTSCRIPT_DEFAULT_MAX_TOKENS")
+	if defaultMaxTokensEnv != "" {
+		tokensInt, err := strconv.Atoi(defaultMaxTokensEnv)
+		if err == nil {
+			slog.Info("Using default max tokens from environment variable", "tokens", tokensInt)
+			DefaultMaxTokens = tokensInt
+		}
+	}
 }
-
-const DefaultMaxTokens = 128_000
 
 func decreaseTenPercent(maxTokens int) int {
 	maxTokens = getBudget(maxTokens)

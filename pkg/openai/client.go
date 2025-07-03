@@ -449,11 +449,22 @@ func (c *Client) Call(ctx context.Context, messageRequest types.CompletionReques
 
 		// If we got back a context length exceeded error, keep retrying and shrinking the message history until we pass.
 		var apiError *openai.APIError
-		if errors.As(err, &apiError) && apiError.Code == "context_length_exceeded" && messageRequest.Chat {
-			// Decrease maxTokens by 10% to make garbage collection more aggressive.
-			// The retry loop will further decrease maxTokens if needed.
-			maxTokens := decreaseTenPercent(messageRequest.MaxTokens)
-			result, err = c.contextLimitRetryLoop(ctx, request, id, env, maxTokens, toolTokenCount, status)
+		if errors.As(err, &apiError) {
+			loopErr := false
+			if apiError.Code == "context_length_exceeded" {
+				slog.Warn("context_length_exceeded", "error", err)
+				loopErr = true
+			} else if strings.Contains(apiError.Message, "max_tokens must be at least 1") {
+				slog.Warn("max_tokens must be at least 1", "error", err)
+				loopErr = true
+			}
+
+			if loopErr && messageRequest.Chat {
+				// Decrease maxTokens by 10% to make garbage collection more aggressive.
+				// The retry loop will further decrease maxTokens if needed.
+				maxTokens := decreaseTenPercent(messageRequest.MaxTokens)
+				result, err = c.contextLimitRetryLoop(ctx, request, id, env, maxTokens, toolTokenCount, status)
+			}
 		}
 		if err != nil {
 			return nil, err
